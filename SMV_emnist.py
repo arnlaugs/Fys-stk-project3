@@ -9,6 +9,7 @@ class_mapping = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 labels=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 #labels=['0','1','2','3','4','5','6','7','8','9']
 def load_data():
+    """ Loads data from the data set, returns x and y for both test and train """
     # Letters
     train_data_path = 'emnist/emnist-letters-train.csv'
     test_data_path = 'emnist/emnist-letters-test.csv'
@@ -29,24 +30,17 @@ def load_data():
     return X_train, y_train, X_test, y_test
 
 def plot_heatmap(expected,predicted,labels):
+
+    """Plots a confusion matrix for expected and predicted values. """
     fig, ax = plt.subplots()
     cm=metrics.confusion_matrix(expected, predicted)
-    #cm_1=np.zeros((len(expected),len(predicted)))
-    #for i in range(len(cm)):
-
-        #t=np.count_nonzero(expected == i)
-        #for j in range(len(cm)):
-
-            #p=float(cm[i][j])/float(t)*100
-            #cm_1[i][j]=p
-            #cm[i][j]=p
-            #print(cm_1[i][j],p, type(p), type(cm_1[i][j]))
     plt.imshow(cm,aspect='auto')
     print(cm.shape, len(labels))
     cbar=plt.colorbar()
     cbar.ax.tick_params(labelsize=14)
     plt.xticks(np.arange(len(labels)),labels,fontsize=14)
     plt.yticks(np.arange(len(labels)),labels,fontsize=14)
+    #Add text
     for i in range(len(cm)):
         for j in range(len(cm)):
             if cm[i][j]<10:
@@ -54,19 +48,20 @@ def plot_heatmap(expected,predicted,labels):
             else:
                 text_s='%02.0f' % (cm[i][j])
 
-            if cm[i][j]>500:
+            if cm[i][j]>500: #black is most sutable on yellow background
                 text = ax.text(j, i, text_s, ha="center", va="center", color="k",fontsize=14)
 
-            else:
+            else:#white is most sutable on purple background
                 text = ax.text(j, i, text_s, ha="center", va="center", color="w",fontsize=14)
     plt.ylabel('Expected',fontsize=14)
     plt.xlabel('Predicted',fontsize=14)
-    print('er')
     plt.savefig("cm_digits_test_.pdf")
     plt.show()
 
 def find_images(test_samples, expected,predicted,labels):
-    L=True; I=True; Q=True; G=True
+    """Creats images of misclassified letters. Saves the images. It is costumized to find L,I,Q and G,
+    future work will be to make it more general """
+    L=True; I=True; Q=True; G=True # It stops after finding one image of each class
     for i in range(test_samples):
         if expected[i]!=predicted[i] and expected[i]==12 and predicted[i]==9 and L==True:
             plt.figure()
@@ -105,26 +100,14 @@ def find_images(test_samples, expected,predicted,labels):
 
 
 X_train, y_train, X_test, y_test = load_data()
-#X_train, X_test, y_train, y_test = train_test_split( X_train, y_train, test_size=0.2)
+
 train_samples=len(X_train)
 test_samples=len(X_test)
-#print(len(X_train),test_samples)
-#train_samples=5000
-
-#test_samples=500
-#test_samples_sum=test_samples+train_samples
-
-#y_test=y_train[train_samples:test_samples_sum]
-#X_test=X_train[train_samples:test_samples_sum]
-#X_train=X_train[:train_samples]
-#y_train=y_train[:train_samples]
-#X_test=X_test[:test_samples]
-#y_test=y_test[:test_samples]
 
 data=X_train
 data_test=X_test
 
-
+#Use suport vector machine to predict.
 classifier = svm.SVC(degree=2,kernel='poly')
 classifier.fit(data,y_train)
 
@@ -133,13 +116,7 @@ predicted = classifier.predict(data_test)
 expected_train=y_train
 predicted_train=classifier.predict(data)
 
-
-print('her')
 find_images(test_samples, expected,predicted,labels)
-
-
-
 print("accuracy test= ",metrics.accuracy_score(expected, predicted))
 print("accuracy train= ",metrics.accuracy_score(expected_train, predicted_train))
-
-#plot_heatmap(expected,predicted,labels)
+plot_heatmap(expected,predicted,labels)
