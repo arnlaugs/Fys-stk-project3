@@ -2,18 +2,21 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from keras.utils import to_categorical
-
+from sklearn import metrics
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, Dropout
 
 
 # The classes in this dataset are labeled after the index of the desired class in the string below
-class_mapping = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-def load_data():
-    train_data_path = 'emnist/emnist-letters-train.csv'
-    test_data_path = 'emnist/emnist-letters-test.csv'
+def load_data(st):
+    train_data_path = 'emnist/emnist-%s-train.csv' %st
+    test_data_path = 'emnist/emnist-%s-test.csv' %st
+    mapping_path = 'emnist/emnist-%s-mapping.txt' %st
+
+    mapping = list(map(chr, np.loadtxt(mapping_path, dtype=np.int)[:,1]))
+    n = len(mapping)
 
     # Read in data (https://arxiv.org/pdf/1702.05373.pd)
     train_data = pd.read_csv(train_data_path, header=None)
@@ -26,24 +29,26 @@ def load_data():
     y_test  = test_data.iloc[:, 0].values
 
     # Making onehot vectors, y-1 because keras expect first class to be 0
-    y_train_onehot, y_test_onehot = to_categorical(y_train-1, 26), to_categorical(y_test-1, 26)
+    y_train_onehot, y_test_onehot = to_categorical(y_train-1, n), to_categorical(y_test-1, n)
     del train_data, test_data, y_train, y_test
 
-    return X_train, y_train_onehot, X_test, y_test_onehot
+    return X_train, y_train_onehot, X_test, y_test_onehot, mapping
 
-X_train, y_train, X_test, y_test = load_data()
+X_train, y_train, X_test, y_test, mapping = load_data("letters")
 
 
 batch_size = 128
-num_classes = 26
+num_classes = len(mapping)
 epochs = 12
 
+print(X_train.shape[1:3])
+
 # input image dimensions
-img_rows, img_cols = 28, 28
+img_rows, img_cols = X_train.shape[1:3]
 
 # Create model. Sequential means that we can add layer by layer.
 model = Sequential()
-model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(28,28,1)))
+model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(img_rows,img_cols,1)))
 model.add(Conv2D(64, (3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
@@ -72,21 +77,4 @@ with open("model.json", "w") as json_file:
 model.save_weights("model.h5")
 print("Saved model to disk")
 
-"""
-# Add layers to the model
-# Conv2D are convolutionsal layers that will deal with the input images
-# 64 and 32 is the number of neurons , kernel=3 size means we will have a 3x3
-# filter matrix. Flatten gives a connection between the convolution and dense
-# layers. Dense is the output layer.
-model.add(Conv2D(784, kernel_size=3, activation='relu', input_shape=(28,28,1)))
-model.add(Conv2D(32, kernel_size=3, activation='relu'))
-model.add(Flatten())
-model.add(Dense(26, activation='softmax'))
 
-
-# Compiling the model
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics = ['accuracy'])
-
-# Training the model
-model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=3)
-"""
