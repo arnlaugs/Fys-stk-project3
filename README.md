@@ -18,4 +18,12 @@ To run thees programs you need to downlode the EMNIST dataset found here: https:
 
 **SMV_emnist.py** 
 
-Loads the date and train using Sklearn's support vector machine with polynomial kernal. 
+Loads the EMNIST data and trains using Scikit-learn's support vector machine with polynomial kernal. 
+
+**Keras_emnist.py**
+
+Loads the EMNIST data and trains using a Keras convolution neural network. Saves the architecture and weights of the system.
+
+**load_conv.py**
+
+Loads the configuration from *Keras_emnist.py* and makes figures based on the results of the test data.
