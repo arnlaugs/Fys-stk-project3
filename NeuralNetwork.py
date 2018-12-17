@@ -5,6 +5,7 @@ from sklearn.metrics import accuracy_score
 import numpy as np
 import seaborn as sns
 from matplotlib2tikz import save as tikz_save
+from sklearn import metrics
 
 
 class NeuralNetwork:
@@ -36,7 +37,7 @@ class NeuralNetwork:
         batch_size=100,
         eta=0.1,
         lmbd=0.0,
-        activation_func = 'sigmoid',
+        activation_func = 'relu',
         activation_func_out = 'softmax',
         cost_func = 'cross_entropy'
     ):
@@ -181,57 +182,8 @@ class NeuralNetwork:
                 self.backpropagation()
 
 
-    def heatmap_eta_lambda(self, X_test, y_test):
-        """
-        Illustrates the accuracy of different combinations
-        of learning rates eta and regularization parameters
-        lambda in a heatmap.
-        """
-        sns.set()
 
-        eta_vals = np.logspace(-4, 1, 6)
-        lmbd_vals = np.logspace(-4, 1, 6)
-
-        train_accuracy = np.zeros((len(eta_vals), len(lmbd_vals)))
-        test_accuracy = np.zeros((len(eta_vals), len(lmbd_vals)))
-
-        for i, eta in enumerate(eta_vals):
-            for j, lmbd in enumerate(lmbd_vals):
-                print("training DNN with lambda=%0.6f and SGD eta=%0.6f." %(lmbd,eta) )
-                DNN = NeuralNetwork(self.X_data_full, self.Y_data_full, eta=eta,
-                                    lmbd=lmbd, epochs=self.epochs,
-                                    batch_size=self.batch_size,
-                                    n_hidden_neurons=self.n_hidden_neurons,
-                                    n_categories=self.n_categories,
-                                    activation_func='sigmoid')
-                DNN.train()
-
-                train_pred = DNN.predict(self.X_data_full)
-                test_pred = DNN.predict(X_test)
-
-                train_accuracy[i][j] = accuracy_score(np.argmax(self.Y_data_full, axis=1), train_pred)
-                test_accuracy[i][j] = accuracy_score(np.argmax(y_test, axis=1), test_pred)
-
-
-
-        fig, ax = plt.subplots(figsize = (10, 10))
-        sns.heatmap(train_accuracy, annot=True, ax=ax, cmap="viridis")
-        ax.set_title("Training Accuracy")
-        ax.set_ylabel("$\eta$")
-        ax.set_xlabel("$\lambda$")
-        tikz_save('heatmap_train_lmbda.tex', figureheight="\\figureheight", figurewidth="\\figurewidth")
-        plt.show()
-
-        fig, ax = plt.subplots(figsize = (10, 10))
-        sns.heatmap(test_accuracy, annot=True, ax=ax, cmap="viridis")
-        ax.set_title("Test Accuracy")
-        ax.set_ylabel("$\eta$")
-        ax.set_xlabel("$\lambda$")
-        tikz_save('heatmap_test_lmbda.tex', figureheight="\\figureheight", figurewidth="\\figurewidth")
-        plt.show()
-
-
-    def heatmap_neurons_eta(self, X_test, y_test):
+    def heatmap_neurons_eta(self, X_test, y_test, save=False):
         """
         Illustrates the accuracy of different combinations
         of learning rates eta and number of neurons in the hidden
@@ -252,8 +204,7 @@ class NeuralNetwork:
                                     lmbd=0.0, epochs=self.epochs,
                                     batch_size=self.batch_size,
                                     n_hidden_neurons=neuron,
-                                    n_categories=self.n_categories,
-                                    activation_func='relu')
+                                    n_categories=self.n_categories)
                 DNN.train()
 
                 train_pred = DNN.predict(self.X_data_full)
@@ -261,6 +212,7 @@ class NeuralNetwork:
 
                 train_accuracy[i][j] = accuracy_score(np.argmax(self.Y_data_full, axis=1), train_pred)
                 test_accuracy[i][j] = accuracy_score(np.argmax(y_test, axis=1), test_pred)
+                print(test_accuracy[i][j])
 
 
         fig, ax = plt.subplots(figsize = (10, 10))
@@ -270,7 +222,8 @@ class NeuralNetwork:
         ax.set_ylabel("hidden neurons")
         ax.set_xticklabels(eta_vals)
         ax.set_yticklabels(neuron_vals)
-        tikz_save('heatmap_train.tex', figureheight="\\figureheight", figurewidth="\\figurewidth")
+        if save:
+            tikz_save('heatmap_train.tex', figureheight="\\figureheight", figurewidth="\\figurewidth")
         plt.show()
 
         fig, ax = plt.subplots(figsize = (10, 10))
@@ -280,7 +233,45 @@ class NeuralNetwork:
         ax.set_ylabel("hidden neurons")
         ax.set_xticklabels(eta_vals)
         ax.set_yticklabels(neuron_vals)
-        tikz_save('heatmap_test.tex', figureheight="\\figureheight", figurewidth="\\figurewidth")
+        if save:
+            tikz_save('heatmap_test.tex', figureheight="\\figureheight", figurewidth="\\figurewidth")
+        plt.show()
+
+
+    def heatmap_prediction_comparison(self, X_test, y_test, labels):
+        """
+        Plots a confusion matrix for expected and predicted values.
+        """
+        self.train()
+
+        predicted = self.predict(X_test)
+        expected = np.argmax(y_test, axis=1)
+
+        fig, ax = plt.subplots()
+        cm=metrics.confusion_matrix(expected, predicted)
+        plt.imshow(cm,aspect='auto')
+        print(cm.shape, len(labels))
+        cbar=plt.colorbar()
+        cbar.ax.tick_params(labelsize=14)
+        plt.xticks(np.arange(len(labels)),labels,fontsize=14)
+        plt.yticks(np.arange(len(labels)),labels,fontsize=14)
+
+        #Add text
+        for i in range(len(cm)):
+            for j in range(len(cm)):
+                if cm[i][j]<10:
+                    text_s='%01.0f' % (cm[i][j])
+                else:
+                    text_s='%02.0f' % (cm[i][j])
+
+                if cm[i][j]>500: #black is most sutable on yellow background
+                    text = ax.text(j, i, text_s, ha="center", va="center", color="k",fontsize=14)
+
+                else:#white is most sutable on purple background
+                    text = ax.text(j, i, text_s, ha="center", va="center", color="w",fontsize=14)
+        plt.ylabel('Expected',fontsize=14)
+        plt.xlabel('Predicted',fontsize=14)
+        plt.savefig("cm_digits_test_.pdf")
         plt.show()
 
 
