@@ -64,5 +64,5 @@ pred_train = NN.predict(X_train)
 print('Test accuracy:', accuracy_score(np.argmax(y_test, axis=1), pred_test))
 print('Test accuracy:', accuracy_score(np.argmax(y_train, axis=1), pred_train))
 
-#NN.heatmap_prediction_comparison(X_test, y_test, class_mapping)
+#NN.heatmap_confusion(X_test, y_test, class_mapping)
 #NN.heatmap_neurons_eta(X_test, y_test, save=True)

@@ -238,7 +238,7 @@ class NeuralNetwork:
         plt.show()
 
 
-    def heatmap_prediction_comparison(self, X_test, y_test, labels):
+    def heatmap_confusion(self, X_test, y_test, labels):
         """
         Plots a confusion matrix for expected and predicted values.
         """
@@ -271,7 +271,6 @@ class NeuralNetwork:
                     text = ax.text(j, i, text_s, ha="center", va="center", color="w",fontsize=14)
         plt.ylabel('Expected',fontsize=14)
         plt.xlabel('Predicted',fontsize=14)
-        plt.savefig("cm_digits_test_.pdf")
         plt.show()
 
 
