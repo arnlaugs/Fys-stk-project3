@@ -1,6 +1,6 @@
 # FYS-STK4155 - Applied data analysis and machine learning: Project 3
 
-In this respotory you will find codes used for project 3 in FYS-STK4155. 
+In this repository you will find codes used for project 3 in FYS-STK4155. 
 
 ### Authors
 The projects found in this repository is a results of the collaboration between
